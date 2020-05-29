@@ -1,0 +1,240 @@
+---
+title: "Project"
+author: "Hansika Karkera"
+date: "4/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Read File
+churn_df <- read.csv("Telco_Customer_Churn.csv")
+# Remove NAs
+churn_df <- na.omit(churn_df)
+
+# Data Wrangling
+churn_df$MultipleLines[churn_df$MultipleLines=="No phone service"] <- as.factor("No")
+churn_df$OnlineSecurity[churn_df$OnlineSecurity=="No internet service"] <- as.factor("No")
+churn_df$OnlineBackup[churn_df$OnlineBackup=="No internet service"] <- as.factor("No")
+churn_df$DeviceProtection[churn_df$DeviceProtection=="No internet service"] <- as.factor("No")
+churn_df$TechSupport[churn_df$TechSupport=="No internet service"] <- as.factor("No")
+churn_df$StreamingTV[churn_df$StreamingTV=="No internet service"] <- as.factor("No")
+churn_df$StreamingMovies[churn_df$StreamingMovies=="No internet service"] <- as.factor("No")
+churn_df$SeniorCitizen[churn_df$SeniorCitizen==0]<- "No"
+churn_df$SeniorCitizen[churn_df$SeniorCitizen==1]<- "Yes"
+
+# Categorizing tenure
+group_tenure <- function(tenure){
+  if (tenure >= 0 & tenure <= 12){
+    return("0-12 months")
+  }else if(tenure > 12 & tenure <= 24){
+    return("12-24 months")
+  }else if (tenure > 24 & tenure <= 48){
+    return("24-48 months")
+  }else if (tenure > 48 & tenure <=60){
+    return("48-60 months")
+  }else if (tenure > 60){
+    return("> 60 months")
+  }
+}
+churn_df$tenure_group <- sapply(churn_df$tenure,group_tenure)
+churn_df$tenure_group <- as.factor(churn_df$tenure_group)
+churn_df$tenure <- NULL
+
+library(dplyr)
+library(corrplot)
+library(RColorBrewer)
+# Correlation plot b/w numerical columns
+churn_corr <- select(churn_df,MonthlyCharges,TotalCharges)  
+corr <- cor(churn_corr)  
+corrplot(corr,method="number",type="upper", order="hclust") 
+# Since total charges and monthly charges are highly correlated, reomove total
+churn_df$TotalCharges <- NULL
+churn_df$customerID <- NULL
+```
+```{r}
+# Categorical Data Plots
+library(plotly)
+fig1 <- plot_ly()
+fig1 <- fig1 %>% 
+  add_pie(data = count(churn_df,gender),labels = ~gender, values = ~n,name="Gender",domain = list(row = 0, column = 0))
+fig1 <- fig1 %>% 
+    add_pie(data = count(churn_df,SeniorCitizen),labels = ~SeniorCitizen, values = ~n,name="SeniorCitizen",domain = list(row = 0, column = 1))
+fig1 <- fig1 %>% 
+    add_pie(data = count(churn_df,Partner),labels = ~Partner, values = ~n,name="Partner",domain = list(row = 1, column = 0))
+fig1 <- fig1 %>% 
+    add_pie(data = count(churn_df,Dependents),labels = ~Dependents, values = ~n,name="Dependents",domain = list(row = 1, column = 1))
+
+fig1 <- fig1 %>% layout(annotations = list(
+        list(x=0.25,y=2,text="Gender",showarrow = F,xref='paper',yref='paper'),list(x=0.8,y=2,text="Senior Citizen",xref='paper',yref='paper'),list(x=0.25,y=0.5,text="Partner",showarrow = F,xref='paper',yref='paper'),list(x=0.8,y=0.5,text="Dependents",showarrow = F,xref='paper',yref='paper')
+),showlegend = T,grid=list(rows=2, columns=2))
+fig1
+```
+```{r}
+fig2 <- plot_ly()
+fig2 <- fig2 %>% 
+  add_pie(data = count(churn_df,PhoneService),labels = ~PhoneService, values = ~n,name="PhoneService",domain = list(row = 0, column = 0))
+fig2 <- fig2 %>% 
+    add_pie(data = count(churn_df,MultipleLines),labels = ~MultipleLines, values = ~n,name="MultipleLines",domain = list(row = 0, column = 1))
+fig2 <- fig2 %>% 
+    add_pie(data = count(churn_df,InternetService),labels = ~InternetService, values = ~n,name="InternetService",domain = list(row = 1, column = 0))
+fig2 <- fig2 %>% 
+    add_pie(data = count(churn_df,OnlineSecurity),labels = ~OnlineSecurity, values = ~n,name="OnlineSecurity",domain = list(row = 1, column = 1))
+
+fig2 <- fig2 %>% layout(annotations = list(
+        list(x=0.2,y= 1.07,text="PhoneService",showarrow = F, xref='paper', yref='paper'), list(x=0.8, y=0.95, text="MultipleLines", xref='paper', yref='paper'), list(x=0.25,y=0.5, text="InternetService", showarrow = F, xref='paper', yref='paper'), list(x=0.8, y=0.5, text="OnlineSecurity", showarrow = F, xref='paper', yref='paper')
+), showlegend = T, grid=list(rows=2, columns=2))
+fig2
+```
+```{r}
+fig3 <- plot_ly()
+fig3 <- fig3 %>% 
+  add_pie(data = count(churn_df,OnlineBackup),labels = ~OnlineBackup, values = ~n,name="OnlineBackup",domain = list(x = c(0, 0.4), y = c(0.4, 1)))
+fig3 <- fig3 %>% 
+    add_pie(data = count(churn_df,DeviceProtection),labels = ~DeviceProtection, values = ~n,name="DeviceProtection",domain = list(x = c(0.6, 1), y = c(0.4, 1)))
+fig3 <- fig3 %>% 
+    add_pie(data = count(churn_df,TechSupport),labels = ~TechSupport, values = ~n,name="TechSupport",domain = list(x = c(0.25, 0.75), y = c(0, 0.6)))
+
+fig3 <- fig3 %>% layout(annotations = list(
+        list(x=0.2,y= 1.07,text="OnlineBackup",showarrow = F, xref='paper', yref='paper'), list(x=0.8, y=0.95, text="DeviceProtection", xref='paper', yref='paper'), list(x=0.5,y=0.7, text="TechSupport", showarrow = F, xref='paper', yref='paper')), showlegend = T)
+fig3
+```
+```{r}
+fig4 <- plot_ly()
+fig4 <- fig4 %>% 
+  add_pie(data = count(churn_df,StreamingTV),labels = ~StreamingTV, values = ~n,name="StreamingTV",domain = list(x = c(0, 0.4), y = c(0.4, 1)))
+fig4 <- fig4 %>% 
+    add_pie(data = count(churn_df,StreamingMovies),labels = ~StreamingMovies, values = ~n,name="StreamingMovies",domain = list(x = c(0.6, 1), y = c(0.4, 1)))
+fig4 <- fig4 %>% layout(annotations = list(
+        list(x=0.15,y= 1.07,text="StreamingTV",showarrow = F, xref='paper', yref='paper'), list(x=0.8, y=0.95, text="StreamingMovies", xref='paper', yref='paper')), showlegend = T)
+fig4
+```
+```{r}
+fig5 <- plot_ly()
+fig5 <- fig5 %>% 
+  add_pie(data = count(churn_df,Contract),labels = ~Contract, values = ~n,name="Contract",domain = list(x = c(0, 0.4), y = c(0.4, 1)))
+fig5 <- fig5 %>% 
+    add_pie(data = count(churn_df,PaperlessBilling),labels = ~PaperlessBilling, values = ~n,name="PaperlessBilling",domain = list(x = c(0.6, 1), y = c(0.4, 1)))
+fig5 <- fig5 %>% 
+    add_pie(data = count(churn_df,PaymentMethod),labels = ~PaymentMethod, values = ~n,name="PaymentMethod",domain = list(x = c(0.25, 0.75), y = c(0, 0.6)))
+
+fig5 <- fig5 %>% layout(annotations = list(
+        list(x=0.1,y= 1,text="Contract",showarrow = F, xref='paper', yref='paper'), list(x=0.9, y=1, text="PaperlessBilling",showarrow = F, xref='paper', yref='paper'), list(x=0.5,y=0, text="PaymentMethod", showarrow = F, xref='paper', yref='paper')), showlegend = T)
+fig5
+```
+```{r}
+##knn model 
+
+library(class)
+library(FNN)
+library(caret)
+## creating dummy variables and data binnig the catrgorical data
+View(churn_df)
+churn_df$Contract<-as.factor(churn_df$Contract)
+churn_df[,c("month-to-month","one year","two year")]<-model.matrix(~Contract-1,data = churn_df)
+
+churn_knn <- churn_df
+
+##m conveerting tenure group
+churn_knn$tenure_group<-as.factor(churn_knn$tenure_group)
+churn_knn[,c("0-12 months","12-24 months","24-48 months","48-60 months","> 60 months")]<-model.matrix(~tenure_group-1,data = churn_knn)
+
+##converting paperless billing and online security , online backup , tech support , churn
+churn_knn$PaperlessBilling <- 1* (churn_knn$PaperlessBilling == "Yes")
+churn_knn$OnlineSecurity <- 1* (churn_knn$OnlineSecurity == "Yes")
+churn_knn$OnlineBackup <- 1* (churn_knn$OnlineBackup == "Yes")
+churn_knn$TechSupport <- 1* (churn_knn$TechSupport == "Yes")
+churn_knn$Churn <- 1* (churn_knn$Churn == "Yes")
+
+##converting payment method
+churn_knn$PaymentMethod<-as.factor(churn_knn$PaymentMethod)
+churn_knn[,c("Electronic Check","Mailed Check","Bank Transfer","Credit card")]<-model.matrix(~PaymentMethod-1,data = churn_knn)
+
+##converting internet service
+churn_knn$InternetService<-as.factor(churn_knn$InternetService)
+churn_knn[,c("DSL","Fiber optic","No Internest service")]<-model.matrix(~InternetService-1,data = churn_knn)
+
+## selecting the predictors 
+churn_knn <- churn_knn[,c(8,9,11,15,17,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,18)]
+churn_knn[,21]<-as.factor(churn_knn[,21])
+
+## diving the data into  (60%)training and (40%)validation data 
+indices= sample(nrow(churn_knn), 0.6*nrow(churn_knn))
+train = churn_knn[indices, ] #60% of the data
+val = churn_knn[-indices,] #40% of the data
+
+
+## normalizing the data
+train_label <- train
+val_label <- val
+churn_knn_label <- churn_knn
+
+
+norm<-preProcess(train[,-21],method = c("center","scale"))
+train_label[,-21] <- predict(norm,train[,-21])
+val_label[,-21] <- predict(norm,val[,-21])
+churn_knn_label[,-21] <- predict(norm,churn_knn[,-21])
+
+## calculating the best value of k 
+accuracy_df <- data.frame(k = seq(1, 65, 1), accuracy = rep(0, 65))
+for(i in 1:65) {
+  knn.pred <- knn(train_label[,-21], val_label[,-21], cl = train_label[,21], k=i)
+  accuracy_df[i, 2] <- confusionMatrix(knn.pred, val_label[,21])$overall[1]
+}
+accuracy_df
+plot(accuracy_df,type='b')
+
+```
+For determining the best value of k , we do the squareroot of number of records of trainig data set . Therefore , here  sqrt(tarin_label) = sqrt(4219) = 64.94 ~ 65. Thus byv iterating forloop for 65 times we get accuracy of diffrent values of k. Almost , accuracy of all the values of k is equivalent  but best choice would be k = 62.
+
+```{r}
+## creating prediction model for knn
+knn_pred<-knn(train=train_label[,-21],test=val_label[,-21],cl=train_label[,21],k=62)
+
+
+## calculating confusion matrix and accuracy of the prediction model
+
+confusionMatrix(knn_pred ,val_label[,21])
+
+
+```
+ 
+ 
+Thus using knn we get accuracy of "0.8059".
+
+```{r}
+## decsion tree 
+
+## diving the data into (70%) training set and (30%) testv set
+
+
+train_set<-sample(row.names(churn_df),0.7*dim(churn_df)[1])
+test_set<-setdiff(row.names(churn_df),train_set)
+train_df<-churn_df[train_set,]
+test_df<-churn_df[test_set,]
+  
+# constructig tree 
+tree <- ctree(Churn~Contract+tenure_group+PaperlessBilling, train_df)
+plot(tree)
+
+
+```
+ 
+```{r}
+
+##classification table 
+pred_tree <- predict(tree, test_df)
+ table(Predicted = pred_tree, Actual = test_df$Churn)
+
+```
+ 
+Above is the classifcation matrix for the decision tree
+
+```{r}
+p1 <- predict(tree, train_df)
+tab1 <- table(Predicted = p1, Actual = train_df$Churn)
+tab2 <- table(Predicted = pred_tree, Actual = test_df$Churn)
+print(paste('Decision Tree Accuracy',sum(diag(tab2))/sum(tab2)))
+
+```
+
+

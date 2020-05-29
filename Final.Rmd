@@ -1,0 +1,511 @@
+---
+title: "Project"
+author: "Hansika Karkera,Vrunda Shah"
+date: "4/11/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+# Read File
+churn_df <- read.csv("Telco_Customer_Churn.csv")
+# Check for NAs
+summary(churn_df)
+# Remove NAs
+churn_df <- na.omit(churn_df)
+cc <- churn_df
+# Data Wrangling
+churn_df$MultipleLines[churn_df$MultipleLines=="No phone service"] <- as.factor("No")
+churn_df$OnlineSecurity[churn_df$OnlineSecurity=="No internet service"] <- as.factor("No")
+churn_df$OnlineBackup[churn_df$OnlineBackup=="No internet service"] <- as.factor("No")
+churn_df$DeviceProtection[churn_df$DeviceProtection=="No internet service"] <- as.factor("No")
+churn_df$TechSupport[churn_df$TechSupport=="No internet service"] <- as.factor("No")
+churn_df$StreamingTV[churn_df$StreamingTV=="No internet service"] <- as.factor("No")
+churn_df$StreamingMovies[churn_df$StreamingMovies=="No internet service"] <- as.factor("No")
+churn_df$SeniorCitizen[churn_df$SeniorCitizen==0]<- "No"
+churn_df$SeniorCitizen[churn_df$SeniorCitizen==1]<- "Yes"
+```
+```{r warning=FALSE}
+library(gridExtra)
+library(ggplot2)
+# Categorical Data Plots
+p1 <- ggplot(churn_df, aes(x=gender,fill = gender)) + ggtitle("Gender") + xlab("Gender") + geom_bar(aes(y = 100*(..count..)/sum(..count..)), width = 0.5) + ylab("Percentage") + coord_flip() + theme_minimal()
+p2 <- ggplot(churn_df, aes(x=SeniorCitizen,fill = SeniorCitizen)) + ggtitle("Senior Citizen") + xlab("Senior Citizen") + geom_bar(aes(y = 100*(..count..)/sum(..count..)), width = 0.5) + ylab("Percentage") + coord_flip() + theme_minimal()
+p3 <- ggplot(churn_df, aes(x=Partner,fill=Partner)) + ggtitle("Partner") + xlab("Partner") + geom_bar(aes(y = 100*(..count..)/sum(..count..)), width = 0.5) + ylab("Percentage") + coord_flip() + theme_minimal()
+p4 <- ggplot(churn_df, aes(x=Dependents,fill = Dependents)) + ggtitle("Dependents") + xlab("Dependents") + geom_bar(aes(y = 100*(..count..)/sum(..count..)), width = 0.5) + ylab("Percentage") + coord_flip() + theme_minimal()
+grid.arrange(p1, p2, p3, p4, ncol=2)
+```
+```{r warning=FALSE}
+library(plotly)
+library(dplyr)
+fig2 <- plot_ly()
+fig2 <- fig2 %>% 
+  add_pie(data = count(churn_df,PhoneService),labels = ~PhoneService, values = ~n,name="PhoneService",domain = list(row = 0, column = 0))
+fig2 <- fig2 %>% 
+    add_pie(data = count(churn_df,MultipleLines),labels = ~MultipleLines, values = ~n,name="MultipleLines",domain = list(row = 0, column = 1))
+fig2 <- fig2 %>% 
+    add_pie(data = count(churn_df,InternetService),labels = ~InternetService, values = ~n,name="InternetService",domain = list(row = 1, column = 0))
+fig2 <- fig2 %>% 
+    add_pie(data = count(churn_df,OnlineSecurity),labels = ~OnlineSecurity, values = ~n,name="OnlineSecurity",domain = list(row = 1, column = 1))
+
+fig2 <- fig2 %>% layout(annotations = list(
+        list(x=0.2,y= 1.07,text="PhoneService",showarrow = F, xref='paper', yref='paper'), list(x=0.8, y=0.95, text="MultipleLines", xref='paper', yref='paper'), list(x=0.25,y=0.5, text="InternetService", showarrow = F, xref='paper', yref='paper'), list(x=0.8, y=0.5, text="OnlineSecurity", showarrow = F, xref='paper', yref='paper')
+), showlegend = T, grid=list(rows=2, columns=2))
+fig2
+```
+```{r}
+fig3 <- plot_ly()
+fig3 <- fig3 %>% 
+  add_pie(data = count(churn_df,OnlineBackup),labels = ~OnlineBackup, values = ~n,name="OnlineBackup",domain = list(x = c(0, 0.4), y = c(0.4, 1)))
+fig3 <- fig3 %>% 
+    add_pie(data = count(churn_df,DeviceProtection),labels = ~DeviceProtection, values = ~n,name="DeviceProtection",domain = list(x = c(0.6, 1), y = c(0.4, 1)))
+fig3 <- fig3 %>% 
+    add_pie(data = count(churn_df,TechSupport),labels = ~TechSupport, values = ~n,name="TechSupport",domain = list(x = c(0.25, 0.75), y = c(0, 0.6)))
+
+fig3 <- fig3 %>% layout(annotations = list(
+        list(x=0.2,y= 1.07,text="OnlineBackup",showarrow = F, xref='paper', yref='paper'), list(x=0.8, y=0.95, text="DeviceProtection", xref='paper', yref='paper'), list(x=0.5,y=0.7, text="TechSupport", showarrow = F, xref='paper', yref='paper')), showlegend = T)
+fig3
+```
+```{r}
+fig4 <- plot_ly()
+fig4 <- fig4 %>% 
+  add_pie(data = count(churn_df,StreamingTV),labels = ~StreamingTV, values = ~n,name="StreamingTV",domain = list(x = c(0, 0.4), y = c(0.4, 1)))
+fig4 <- fig4 %>% 
+    add_pie(data = count(churn_df,StreamingMovies),labels = ~StreamingMovies, values = ~n,name="StreamingMovies",domain = list(x = c(0.6, 1), y = c(0.4, 1)))
+fig4 <- fig4 %>% layout(annotations = list(
+        list(x=0.15,y= 1.07,text="StreamingTV",showarrow = F, xref='paper', yref='paper'), list(x=0.8, y=0.95, text="StreamingMovies", xref='paper', yref='paper')), showlegend = T)
+fig4
+```
+```{r warning=FALSE}
+p1 <- ggplot(churn_df, aes(x=Contract,fill=Contract)) + ggtitle("Contract") + xlab("Contract") + 
+  geom_bar(aes(y = 100*(..count..)/sum(..count..)), width = 0.5) + ylab("Percentage") + coord_flip() + theme_minimal()
+p2 <- ggplot(churn_df, aes(x=PaperlessBilling,fill=PaperlessBilling)) + ggtitle("Paperless Billing") + xlab("Paperless Billing") + 
+  geom_bar(aes(y = 100*(..count..)/sum(..count..)), width = 0.5) + ylab("Percentage") + coord_flip() + theme_minimal()
+p3 <- ggplot(churn_df, aes(x=PaymentMethod,fill=PaymentMethod)) + ggtitle("Payment Method") + xlab("Payment Method") +
+  geom_bar(aes(y = 100*(..count..)/sum(..count..)), width = 0.5) + ylab("Percentage") + coord_flip() + theme_minimal()
+grid.arrange(p1,p2,p3,nrow=3)
+```
+From the above plots we can see all the input variables have a wide spread of each value.
+
+```{r}
+# Categorizing tenure
+group_tenure <- function(tenure){
+  if (tenure >= 0 & tenure <= 12){
+    return("0-12 months")
+  }else if(tenure > 12 & tenure <= 24){
+    return("12-24 months")
+  }else if (tenure > 24 & tenure <= 48){
+    return("24-48 months")
+  }else if (tenure > 48 & tenure <=60){
+    return("48-60 months")
+  }else if (tenure > 60){
+    return("> 60 months")
+  }
+}
+churn_df$tenure_group <- sapply(churn_df$tenure,group_tenure)
+churn_df$tenure_group <- as.factor(churn_df$tenure_group)
+churn_df$tenure <- NULL
+
+library(dplyr)
+library(corrplot)
+library(RColorBrewer)
+# Correlation plot b/w numerical columns
+churn_corr <- select(churn_df,MonthlyCharges,TotalCharges)  
+corr <- cor(churn_corr)  
+
+corrplot(corr,method="number",type="upper", order="hclust") 
+# Since total charges and monthly charges are highly correlated, reomove total
+churn_df$TotalCharges <- NULL
+churn_df$customerID <- NULL
+```
+```{r warning=FALSE}
+# Variable Selection - Stepwise Regression
+fit <- glm(Churn~.,data = churn_df,family = binomial(link = "logit"))
+library(MASS)
+stepAIC(fit,direction = "backward")
+```
+```{r warning=FALSE}
+# Variable Selection - All subsets Regression
+library(leaps)
+leaps <- regsubsets(Churn~., data = churn_df)
+plot(leaps,scale = "adjr2")
+```
+
+```{r warning=FALSE}
+library(caret)
+# Split to training and test
+churn_lr <- churn_df
+churn_lr$Churn <- 1 * (churn_lr$Churn == "Yes")
+intrain<- createDataPartition(churn_lr$Churn,p=0.7,list=FALSE)
+# set.seed(20)
+train_lr<- churn_lr[indices,]
+test_lr<- churn_lr[-indices,]
+
+# Building logistic regression model with all the attributes
+lr_model <- glm(Churn~.,data = train_lr,family = binomial(link = "logit"))
+summary(lr_model)
+```
+
+To begin with creating the logistic regression model, we divide the data into training and testing data. After which we create a logistic regression model using all the attributes included after data preprocessing. From the summary we can observe from the p-value that the factor that affect churn the most are - Tenure, Contract, Paperless Billing. The tenure group of 0-12 months and 12-24 months are the most likely period within which a customer could dropout of service. 
+
+```{r warning=TRUE}
+test_lr_predict1<- predict(lr_model,test_lr)
+test_lr_predict <- factor(ifelse(test_lr_predict1 >= 0.5, "1", "0"))
+#Confusion Matrix for Logistic Model -1
+confusionMatrix(data = test_lr_predict, reference = as.factor(test_lr$Churn))
+```
+Using the logistic model created with the help of training data, we predict Churn for the testin data. Using confusionMatrix we see the accuracy of the above model to be 79.18%.
+
+```{r}
+library(pROC)
+roc(test_lr$Churn,test_lr_predict1,plot=TRUE,print.auc=TRUE)
+```
+
+The above AUC-ROC curve measures the preformance of the classification model. The AUC value tells how much the model is capable of distinguishing between classes.For the above model we have and AUC value of 0.854, hence this model can efficiently distinguish between the Churn values of Yes and No.
+
+```{r}
+library(MASS)
+# Logistic model - using stepAIC
+lr_aic_model <- glm(formula = Churn ~ SeniorCitizen + Dependents + MultipleLines + InternetService + OnlineSecurity + TechSupport + StreamingTV + StreamingMovies + Contract + PaperlessBilling + PaymentMethod + MonthlyCharges + tenure_group, family = binomial(link = "logit"), data = train_lr)
+summary(lr_aic_model)
+```
+
+As per the stepwise AIC implemented for variable selection, we drop Gender, Partner,Phone Service,OnlineBackup,Device Protection in the above model. We observe a change in the p-values for all the attributes but Tenure,Contract,PaperlessBilling still are the essential input variables.
+
+```{r}
+# Predict test data using the AIC model 
+test_lr_predict2 <- predict(lr_aic_model,test_lr)
+test_pred2 <- factor(ifelse(test_lr_predict2 >= 0.5, "1", "0"))
+confusionMatrix(data = test_pred2, reference = as.factor(test_lr$Churn))
+```
+The above model created reduces the accuracy by 0.19%.The variables dropped in the AIC model do not have a significant affect on the logistic model and Churn. 
+
+```{r}
+library(pROC)
+roc(test_lr$Churn,test_lr_predict2,plot=TRUE,print.auc=TRUE)
+```
+
+From the above AUC-ROC plot we can observe that there is no change in the AUC value after dropping the variables.
+
+```{r}
+# Logistic model using the variables selected from all subset regression.
+lr_model3 <- glm(Churn~PhoneService+DeviceProtection+StreamingTV+PaperlessBilling+tenure_group+InternetService+Contract,data = train_lr) 
+summary(lr_model3)
+```
+```{r}
+lr_predict3 <- predict(lr_model3,test_lr)
+test_pred3 <- factor(ifelse(lr_predict3 >= 0.5, "1", "0"))
+confusionMatrix(data = test_pred3, reference = as.factor(test_lr$Churn))
+```
+
+On comparing the accuracy for the tree models we see that this model is the most accurate in classifying the validation dataset.
+
+```{r}
+library(pROC)
+roc(test_lr$Churn,lr_predict3,plot=TRUE,print.auc=TRUE)
+```
+The AUC value for the above plot is 0.837 which is lower than the above two models.
+```{r}
+# Decision Tree - 01
+# Constructing the decision tree for the all-subset regression variables
+library(rpart)
+library(rpart.plot)
+r1<- rpart(Churn ~ PhoneService+DeviceProtection+StreamingTV+PaperlessBilling+tenure_group+InternetService+Contract,train_lr,parms=list(split=c("information","gini")))
+rpart.plot(r1)
+```
+```{r}
+# Confusion matrix for the first decision tree
+p1 <- predict(r1,test_lr)
+p1_factor <- factor(ifelse(p1 >= 0.5, "1", "0"))
+confusionMatrix(p1_factor,as.factor(test_lr$Churn))
+```
+
+The accuracy for the above model is 79.28% with sensitivity of 0.9504 and specificity of 0.3327.
+
+```{r warning=FALSE}
+# Decision Tree - 02
+library(rpart)
+library(rpart.plot)
+r2<- rpart(Churn~SeniorCitizen+InternetService+StreamingTV+StreamingMovies+Contract+PaperlessBilling+PaymentMethod+tenure_group+MonthlyCharges,train_lr,parms=list(split=c("information","gini")))
+rpart.plot(r2)
+```
+
+The above model is created after dropping the least affecting variables like Gender,Device Protection, Online Backup,Partner, Dependents.
+
+```{r warning=FALSE}
+p2 <- predict(r2,test_lr)
+p2_factor <- factor(ifelse(p2 >= 0.5, "1", "0"))
+confusionMatrix(p2_factor,as.factor(test_lr$Churn))
+```
+On seeing the accuracy for this model we can observe that dropping the above variables did not have any affect on the accuracy of the decision tree.
+
+```{r warning=FALSE}
+# Creating Random Forest
+library(randomForest)
+churn_rf <- churn_df
+churn_rf$Churn <- 1 * (churn_rf$Churn == "Yes")
+churn_rf <- churn_rf %>%
+  mutate_if(is.character, as.factor)
+ train.index  <- sample(row.names(churn_rf), 0.7*dim(churn_rf)[1])
+ valid.index <- setdiff(row.names(churn_rf), train.index)
+ train_rf <- churn_rf[train.index, ]
+ valid_rf <- churn_rf[valid.index, ]
+rf1 <- randomForest(Churn~SeniorCitizen+InternetService+StreamingTV+StreamingMovies+Contract+PaperlessBilling+PaymentMethod+tenure_group+MonthlyCharges, data = train_rf, ntree = 500,mtry = 4, nodesize = 5, importance = TRUE)
+
+varImpPlot(rf1)
+## confusion matrix
+rf.predict_1 <- predict(rf1, valid_rf)
+rf.pred <- factor(ifelse(rf.predict_1 >= 0.5, "1", "0"))
+confusionMatrix(rf.pred, as.factor(valid_rf$Churn))
+```
+```{r}
+rf3 <- randomForest(Churn~InternetService+Contract+PaperlessBilling+PaymentMethod+tenure_group, data = train_rf, ntree = 500,mtry = 4, nodesize = 5, importance = TRUE)
+## confusion matrix
+rf.predict_3 <- predict(rf3, valid_rf)
+rf.pred3 <- factor(ifelse(rf.predict_3 >= 0.5, "1", "0"))
+confusionMatrix(rf.pred3, as.factor(valid_rf$Churn))
+```
+
+On comparing rf2 and rf3 we can see that including Internet Service instead of Monthly Charges in the random forest increases it's accuracy.
+
+```{r}
+#K-NN
+library(class)
+library(FNN)
+library(caret)
+## creating dummy variables and data binnig the catrgorical data
+churn_df$Contract<-as.factor(churn_df$Contract)
+churn_knn <- churn_df
+churn_knn[,c("month-to-month","one year","two year")]<-model.matrix(~Contract-1,data = churn_knn)
+churn_knn$tenure_group<-as.factor(churn_knn$tenure_group)
+churn_knn[,c("0-12 months","12-24 months","24-48 months","48-60 months","> 60 months")]<-model.matrix(~tenure_group-1,data = churn_knn)
+##converting payment method
+churn_knn$PaymentMethod<-as.factor(churn_knn$PaymentMethod)
+churn_knn[,c("Electronic Check","Mailed Check","Bank Transfer","Credit card")]<-model.matrix(~PaymentMethod-1,data = churn_knn)
+##converting internet service
+churn_knn$InternetService<-as.factor(churn_knn$InternetService)
+churn_knn[,c("DSL","Fiber optic","No Internest service")]<-model.matrix(~InternetService-1,data = churn_knn)
+
+##converting paperless billing and churn
+churn_knn$PaperlessBilling <- 1* (churn_knn$PaperlessBilling == "Yes")
+churn_knn$Churn <- 1* (churn_knn$Churn == "Yes")
+churn_knn$SeniorCitizen <- 1* (churn_knn$SeniorCitizen == "Yes")
+churn_knn$StreamingMovies <- 1* (churn_knn$StreamingMovies == "Yes")
+churn_knn$StreamingTV <- 1* (churn_knn$StreamingTV == "Yes")
+
+## selecting the predictors 
+churn_knn1 <- churn_knn[,c(2,32,33,34,12,13,20,21,22,15,28,29,30,31,23,24,25,26,27,17,18)]
+churn_knn1[,21]<-as.factor(churn_knn1[,21])
+## diving the data into  (70%)training and (30%)validation data 
+indices= sample(nrow(churn_knn1), 0.7*nrow(churn_knn1))
+train1 = churn_knn1[indices, ] #70% of the data
+val1 = churn_knn1[-indices,] #30% of the data
+
+## normalizing the data
+train_label1 <- train1
+val_label1 <- val1
+churn_knn_label1 <- churn_knn1
+
+library(caret)
+norm<-preProcess(train1[,-21],method = c("center","scale"))
+train_label1[,-21] <- predict(norm,train1[,-21])
+val_label1[,-21] <- predict(norm,val1[,-21])
+churn_knn_label1[,-21] <- predict(norm,churn_knn1[,-21])
+library(class)
+## calculating the best value of k 
+accuracy_df1 <- data.frame(k = seq(1,65,1), accuracy = rep(0, 65))
+for(i in 1:65) {
+  knn.pred1 <- knn(train_label1[,-21], val_label1[,-21], cl = train_label1[,21], k=i)
+  accuracy_df1[i, 2] <- confusionMatrix(knn.pred1, val_label1[,21])$overall[1]
+}
+plot(accuracy_df1,type='b')
+```
+For determining the best value of k , we do the squareroot of number of records of trainig data set . Therefore , here  sqrt(train_label) = sqrt(4219). Thus by iterating for loop for 65 times we get accuracy of diffrent values of k. Almost , accuracy of all the values of k is equivalent  but best choice would be k = 40 in this case.
+
+```{r}
+## creating prediction model for knn
+knn_pred1 <-knn(train=train_label1[,-21],test=val_label1[,-21],cl=train_label1[,21],k=40)
+## calculating confusion matrix and accuracy of the prediction model
+confusionMatrix(knn_pred1 ,val_label1[,21])
+```
+
+```{r}
+## selecting the predictors 
+churn_knn2 <- churn_knn[,c(32,33,34,20,21,22,15,28,29,30,31,23,24,25,26,27,18)]
+churn_knn2[,17]<-as.factor(churn_knn2[,17])
+## diving the data into  (70%)training and (30%)validation data 
+indices= sample(nrow(churn_knn2), 0.7*nrow(churn_knn2))
+train2 = churn_knn2[indices, ] #70% of the data
+val2 = churn_knn2[-indices,] #30% of the data
+
+## normalizing the data
+train_label2 <- train2
+val_label2 <- val2
+churn_knn_label2 <- churn_knn2
+
+library(caret)
+norm2<-preProcess(train2[,-17],method = c("center","scale"))
+train_label2[,-17] <- predict(norm2,train2[,-17])
+val_label2[,-17] <- predict(norm2,val2[,-17])
+churn_knn_label2[,-17] <- predict(norm2,churn_knn2[,-17])
+library(class)
+## calculating the best value of k 
+accuracy_df2 <- data.frame(k = seq(1,50,1), accuracy = rep(0,50))
+for(i in 1:50) {
+  knn.pred2 <- knn(train_label2[,-17], val_label2[,-17], cl = train_label2[,17], k=i)
+  accuracy_df2[i, 2] <- confusionMatrix(knn.pred2, val_label2[,17])$overall[1]
+}
+plot(accuracy_df2,type='b')
+## creating prediction model-2 for knn
+knn_pred2 <-knn(train=train_label2[,-17],test=val_label2[,-17],cl=train_label2[,17],k=43)
+## calculating confusion matrix and accuracy of the prediction model
+confusionMatrix(knn_pred2 ,val_label2[,17])
+```
+
+```{r}
+library(dplyr)
+churn_nn1 <- select(churn_df,SeniorCitizen,InternetService,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,tenure_group,MonthlyCharges,Churn)
+churn_nn1$SeniorCitizen <- 1* (churn_nn1$SeniorCitizen == "Yes")
+churn_nn1$StreamingTV <- 1* (churn_nn1$StreamingTV == "Yes")
+churn_nn1$StreamingMovies <- 1* (churn_nn1$StreamingMovies == "Yes")
+churn_nn1$PaperlessBilling <- 1* (churn_nn1$PaperlessBilling == "Yes")
+churn_nn1$Churn <- 1* (churn_nn1$Churn == "Yes")
+churn_nn1$MonthlyCharges <- scale(churn_nn1$MonthlyCharges)
+vars=c("InternetService","Contract","PaymentMethod","tenure_group")
+library(neuralnet)
+library(BART)
+Data <- cbind(churn_nn1[,c(vars)],
+class.ind(churn_nn1[,]$InternetService),
+class.ind(churn_nn1[,]$Contract),
+class.ind(churn_nn1[,]$PaymentMethod),
+class.ind(churn_nn1[,]$tenure_group))
+
+names(Data)=c(vars,
+paste("InternetService_", c(1, 2, 3, 4), sep=""), paste("Contract_", c(1, 2, 3), sep=""),paste("PaymentMethod_", c(1,2,3,4), sep=""),paste("tenure_group", c(1,2,3,4), sep=""))
+
+Data[,1:4]<-NULL
+input_nn1 <- cbind(churn_nn1,Data)
+input_nn1$InternetService<-NULL
+input_nn1$Contract<-NULL
+input_nn1$PaymentMethod<-NULL
+input_nn1$tenure_group<-NULL
+
+indices= sample(nrow(input_nn1), 0.7*nrow(input_nn1))
+train1 = input_nn1[indices, ] #70% of the data
+val1 = input_nn1[-indices,] #30% of the data
+nn1 <- neuralnet(Churn~.,data = train1,hidden = 2)
+plot(nn1)
+```
+```{r}
+library(caret)
+nn_predict1 <- predict(nn1, val1)
+nn_pred1 <- factor(ifelse(nn_predict1 >= 0.5, "1", "0"))
+confusionMatrix(nn_pred1, as.factor(val1$Churn))
+```
+```{r}
+# Neural Networks -2
+library(dplyr)
+churn_nn2 <- select(churn_df,InternetService,Contract,PaperlessBilling,PaymentMethod,tenure_group,Churn)
+churn_nn2$PaperlessBilling <- 1* (churn_nn2$PaperlessBilling == "Yes")
+churn_nn2$Churn <- 1* (churn_nn2$Churn == "Yes")
+
+vars=c("InternetService","Contract","PaymentMethod","tenure_group")
+library(neuralnet)
+library(BART)
+Data <- cbind(churn_nn2[,c(vars)],
+class.ind(churn_nn2[,]$InternetService),
+class.ind(churn_nn2[,]$Contract),
+class.ind(churn_nn2[,]$PaymentMethod),
+class.ind(churn_nn2[,]$tenure_group))
+
+names(Data)=c(vars,
+paste("InternetService_", c(1, 2, 3, 4), sep=""), paste("Contract_", c(1, 2, 3), sep=""),paste("PaymentMethod_", c(1,2,3,4), sep=""),paste("tenure_group", c(1,2,3,4), sep=""))
+Data[,1:4]<-NULL
+input_nn2 <- cbind(churn_nn2,Data)
+input_nn2$InternetService<-NULL
+input_nn2$Contract<-NULL
+input_nn2$PaymentMethod<-NULL
+input_nn2$tenure_group<-NULL
+
+indices= sample(nrow(input_nn2), 0.7*nrow(input_nn2))
+train2 = input_nn2[indices, ] #70% of the data
+val2 = input_nn2[-indices,] #30% of the data
+nn2<- neuralnet(Churn~.,data = train2,hidden = 3)
+plot(nn2)
+```
+```{r}
+library(caret)
+nn_predict2 <- predict(nn2, val2)
+nn_pred2 <- factor(ifelse(nn_predict2 >= 0.5, "1", "0"))
+confusionMatrix(nn_pred2, as.factor(val2$Churn))
+```
+
+```{r}
+#LDA
+library(MASS)
+linear1 <- lda(Churn ~. , data = train_label1)
+linear1
+
+##  calculating the accuracy
+predictions1 <- linear1 %>% predict(val_label1)
+mean(predictions1$class==val_label1$Churn) 
+
+## finding the classification using default cuttoff 0.5
+sum(predictions1$posterior[ ,1] >=.5)
+library(caret)
+confusionMatrix(predictions1$class, val_label1$Churn)
+```
+The accuracy for the above discriminant model is 80.62%.
+
+```{r}
+#LDA - 02
+library(MASS)
+linear2 <- lda(Churn ~. , data = train_label2)
+linear2
+
+##  calculating accuracy
+predictions2 <- linear2 %>% predict(val_label2)
+mean(predictions2$class==val_label2$Churn) 
+
+## finding the classification using default cuttoff 0.5
+sum(predictions2$posterior[ ,1] >=.5)
+library(caret)
+confusionMatrix(predictions2$class, val_label2$Churn)
+```
+Accuracy for the above discriminant model is 79.95%
+
+```{r}
+library(Metrics)
+rmse1 <- rmse(test_lr_predict1,test_lr$Churn)
+rmse2 <- rmse(test_lr_predict2,test_lr$Churn)
+rmse3 <- rmse(lr_predict3,test_lr$Churn)
+rmse4 <- rmse(p1,test_lr$Churn)
+rmse5 <- rmse(p2,test_lr$Churn)
+rmse6 <- rmse(rf.predict_1,valid_rf$Churn)
+rmse7 <- rmse(rf.predict_3,valid_rf$Churn)
+rmse8 <- rmse(nn_predict1,val1$Churn)
+rmse9 <- rmse(nn_predict2,val2$Churn)
+rmse10 <- rmse(mean(predictions1$class==val_label1$Churn) 
+,val2$Churn)
+rmse11 <- rmse(mean(predictions2$class==val_label2$Churn) 
+,val2$Churn)
+
+
+rmse_df <- data.frame("Model"=c("LogisticModel1","LogisticModel2","LogisticModel3","DecisionTree1","DecisionTree2","RandomForest1","RandomForest2","NeuralNetwork1","NeuralNetwork2","LDA1","LDA2"), "RMSE"=c(rmse1,rmse2,rmse3,rmse4,rmse5,rmse6,rmse7,rmse8,rmse9,rmse10,rmse11))
+rmse_df
+```
+```{r}
+# Prediction using Neural Network 
+new_df_nn <- data.frame(SeniorCitizen=0,StreamingTV=1,StreamingMovies=1,PaperlessBilling=1,MonthlyCharges=50.5,InternetService_1=0,InternetService_2=1,InternetService_3=0,InternetService_4=0,Contract_1=1,Contract_2=0,Contract_3=0,PaymentMethod_1=0,PaymentMethod_2=1,PaymentMethod_3=0,PaymentMethod_4=0,tenure_group1=1,tenure_group2=0,tenure_group3=0,tenure_group4=0)
+
+nn_predict_1<-predict(nn1,new_df)
+nn_pred1 <- factor(ifelse(nn_predict_1 >= 0.5, "1", "0"))
+nn_pred1
+
+# Prediction using LDA model  
+new_df_lda <- data.frame(SeniorCitizen=0,StreamingTV=1,StreamingMovies=1,MonthlyCharges=50.5,DSL=0,`Fiber optic`=1,`No Internest service`=0,`month-to-month`=1,`one year`=0,`two year`=0,PaperlessBilling=1,`Electronic Check`=0,`Mailed Check`=1,`Bank Transfer`=0,`Credit card`=0,`0-12 months`=1,`12-24 months`=0,`24-48 months`=0,`48-60 months`=0,`> 60 months`=0)
+names(new_df_lda)=names(val_label1[,-21])
+lda_predict_1 <- linear2 %>% predict(new_df_lda)
+sum(lda_predict_1$posterior[ ,1] >=.5)
+```
